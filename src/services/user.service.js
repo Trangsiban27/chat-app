@@ -42,6 +42,26 @@ class UserService {
             avatar: updateUser.avatar
         }
     }
+
+    static updateUserProfile = async (userId, updateData) => {
+        if (!userId) throw new BadRequestError('User not found')
+
+        const block = ['password', 'email', '_id', 'createdAt', 'updatedAt', '__v', 'avatar']
+        block.forEach(field => delete updateData[field])
+
+        const updateUser = await usersModel.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            {
+                new: true
+                , runValidators: true
+            }
+        ).select('-password -_id -createdAt -updatedAt -__v -avatar').lean()
+
+        if (!updateUser) throw new NotFoundError('User not found!')
+
+        return updateUser
+    }
 }
 
 module.exports = UserService
