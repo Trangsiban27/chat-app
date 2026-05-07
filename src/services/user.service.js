@@ -72,6 +72,33 @@ class UserService {
 
         return getInfoData(user, ['email', 'username', 'avatar'])
     }
+
+    static updatePrivacySetting = async (userId, settings) => {
+        if (!userId) throw new NotfoundError('User not found')
+
+        const updateSettings = {}
+        for (let key in settings) {
+            updateSettings[`settings.${key}`] = settings[key]
+        }
+
+        const updateUser = await usersModel.findByIdAndUpdate(
+            userId,
+            { $set: updateSettings },
+            { new: true, runValidators: true }
+        )
+
+        if (!updateUser) throw new NotfoundError('User not found!')
+
+        return getInfoData(updateUser, ['settings'])
+    }
+
+    static getUserPrivacy = async (userId) => {
+        if (!userId) throw new NotfoundError('User not found')
+
+        const userSettings = await usersModel.findById(userId).select('settings')
+
+        return userSettings
+    }
 }
 
 module.exports = UserService

@@ -36,6 +36,24 @@ class UserController {
             metadata: await UserService.getUserProfile(userId)
         }).send(res)
     }
+
+    updateUserPrivacy = async (req, res, next) => {
+        const userId = req.user
+
+        new SuccessResponse({
+            message: 'Update Privacy success',
+            metadata: await UserService.updatePrivacySetting(userId, req.body)
+        }).send(res)
+    }
+
+    getUserPrivacy = async (req, res, next) => {
+        const userId = req.user
+
+        new SuccessResponse({
+            message: 'Get User Privacy success',
+            metadata: await UserService.getUserPrivacy(userId)
+        }).send(res)
+    }
 }
 
 module.exports = new UserController();

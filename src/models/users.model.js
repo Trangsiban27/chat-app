@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    lastLogin: {
+        type: Date,
+        default: Date.now
+    },
+    settings: {
+        showOnlineStatus: {
+            type: Boolean,
+            default: true
+        }
+    }
 }, {
     collection: COLLECTION_NAME,
     timestamps: true
