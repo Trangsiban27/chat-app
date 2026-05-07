@@ -25,5 +25,6 @@ router.post('/upload-avatar', authentication, (req, res, next) => {
 }, asyncHandler(userController.uploadAvatar));
 
 router.patch('/update-profile', asyncHandler(userController.updateUserProfile))
+router.get('/profile', asyncHandler(userController.getUserProfile))
 
 module.exports = router

@@ -27,6 +27,15 @@ class UserController {
             metadata: await UserService.updateUserProfile(userId, updateData)
         }).send(res)
     }
+
+    getUserProfile = async (req, res, next) => {
+        const userId = req.user
+
+        new SuccessResponse({
+            message: 'Get user profile success',
+            metadata: await UserService.getUserProfile(userId)
+        }).send(res)
+    }
 }
 
 module.exports = new UserController();

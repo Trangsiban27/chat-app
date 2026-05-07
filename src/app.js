@@ -12,8 +12,14 @@ app.use(compression())
 app.use(express.json())
 // app.use(express.urlencoded({ extended: true }))
 app.use(cors({
-    origin: 'http://localhost:3000',
-    allowedHeaders: ['*'],
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3000/'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'x-api-key',
+        'x-client-id' // Đây là các header bạn dùng trong axios.ts
+    ],
     credentials: true
 }))
 

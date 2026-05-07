@@ -1,8 +1,8 @@
 'use strict'
 
-const { BadRequestError } = require("../core/error.response")
+const { BadRequestError, NotfoundError } = require("../core/error.response")
 const usersModel = require("../models/users.model")
-const { convertObjectIdMongoDB } = require("../utils")
+const { convertObjectIdMongoDB, getInfoData } = require("../utils")
 
 class UserService {
 
@@ -61,6 +61,16 @@ class UserService {
         if (!updateUser) throw new NotFoundError('User not found!')
 
         return updateUser
+    }
+
+    static getUserProfile = async (userId) => {
+        if (!userId) throw new BadRequestError('User not found')
+
+        const user = await usersModel.findById(userId)
+
+        if (!user) throw new NotfoundError('User not found')
+
+        return getInfoData(user, ['email', 'username', 'avatar'])
     }
 }
 
