@@ -5,9 +5,13 @@ const _ = require('lodash')
 const convertObjectIdMongoDB = (id) => {
     if (!id) throw new BadRequestError('Id not found!')
 
-    if (!Types.ObjectId.isValid(id)) throw new BadRequestError('Invalid id!')
+    const idStr = id.toString();
 
-    return new Types.ObjectId(id)
+    if (!Types.ObjectId.isValid(idStr)) {
+        throw new BadRequestError('Invalid id format!');
+    }
+
+    return new Types.ObjectId(idStr);
 }
 
 const getInfoData = (object = {}, fields = []) => {

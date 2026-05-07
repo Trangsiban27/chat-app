@@ -96,7 +96,7 @@ class AccessService {
         return {
             code: 200,
             data: {
-                user: getInfoData(foundUser, ['_id', 'name', 'email']),
+                user: getInfoData(foundUser, ['_id', 'username', 'email']),
                 tokens
             }
         }

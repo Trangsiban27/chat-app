@@ -36,7 +36,9 @@ class KeyTokenService {
 
         if (!userId) throw new BadRequestError('UserId not  found!')
 
-        return await keyTokenModel.findById(convertObjectIdMongoDB(convertObjectIdMongoDB))
+        return await keyTokenModel.findOne({
+            user: convertObjectIdMongoDB(userId)
+        })
     }
 
     static deleteKeyStoreById = async (keyId) => {
