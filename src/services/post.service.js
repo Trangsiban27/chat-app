@@ -88,7 +88,8 @@ class PostService {
             .lean()
 
         const totalPosts = await postsModel.countDocuments({
-            createdAt: { $gte: twoDaysAgo, isDelete: false }
+            createdAt: { $gte: twoDaysAgo },
+            isDelete: false
         })
 
         return {
