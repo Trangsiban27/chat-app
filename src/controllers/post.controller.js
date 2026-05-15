@@ -32,14 +32,18 @@ class PostController {
 
     getAllHighlightPosts = async (req, res, next) => {
 
+        const userId = req.user
         const { page, limit } = req.query
 
         new SuccessResponse({
             message: 'Get highlight post successfully!',
-            metadata: await PostService.getHighlightsPost({
-                page: page || 1,
-                limit: limit || 10
-            })
+            metadata: await PostService.getHighlightsPost(
+                userId,
+                {
+                    page: page || 1,
+                    limit: limit || 10
+                }
+            )
         }).send(res)
     }
 

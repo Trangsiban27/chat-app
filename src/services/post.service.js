@@ -69,7 +69,7 @@ class PostService {
         }
     }
 
-    static getHighlightsPost = async ({ page = 1, limit = 10 }) => {
+    static getHighlightsPost = async (userId, { page = 1, limit = 10 }) => {
         const skip = (page - 1) * limit
 
         const twoDaysAgo = new Date()
@@ -94,8 +94,15 @@ class PostService {
             isDelete: false
         })
 
+        const postsWithReactStatus = posts.map(post => {
+            return {
+                ...post,
+                isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
+            };
+        });
+
         return {
-            posts,
+            posts: postsWithReactStatus,
             pagination: {
                 currentPage: Number(page),
                 limit: Number(limit),
