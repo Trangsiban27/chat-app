@@ -53,6 +53,7 @@ class PostService {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
+            .populate('author', '_id username avatar')
             .lean()
 
         const totalPosts = await postsModel.countDocuments()
@@ -85,6 +86,7 @@ class PostService {
             })
             .skip(skip)
             .limit(limit)
+            .populate('author', '_id username avatar')
             .lean()
 
         const totalPosts = await postsModel.countDocuments({
@@ -115,6 +117,7 @@ class PostService {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
+            .populate('author', '_id username avatar')
             .lean()
 
         const totalPosts = await postsModel.countDocuments(filter)
