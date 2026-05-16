@@ -46,7 +46,7 @@ class PostService {
         }
     }
 
-    static getAllPostLatest = async ({ page = 1, limit = 10 }) => {
+    static getAllPostLatest = async (userId, { page = 1, limit = 10 }) => {
         const skip = (page - 1) * limit
 
         const posts = await postsModel.find({ isDelete: false })
@@ -58,8 +58,15 @@ class PostService {
 
         const totalPosts = await postsModel.countDocuments()
 
+        const postsWithReactStatus = posts.map(post => {
+            return {
+                ...post,
+                isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
+            };
+        });
+
         return {
-            posts,
+            posts: postsWithReactStatus,
             pagination: {
                 currentPage: Number(page),
                 limit: Number(limit),
@@ -129,8 +136,15 @@ class PostService {
 
         const totalPosts = await postsModel.countDocuments(filter)
 
+        const postsWithReactStatus = posts.map(post => {
+            return {
+                ...post,
+                isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
+            };
+        });
+
         return {
-            posts,
+            posts: postsWithReactStatus,
             pagination: {
                 currentPage: Number(page),
                 limit: Number(limit),

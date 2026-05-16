@@ -19,14 +19,18 @@ class PostController {
 
     getAllPostLatest = async (req, res, next) => {
 
+        const userId = req.user
         const { page, limit } = req.query
 
         new SuccessResponse({
             message: 'Get latest post successfully',
-            metadata: await PostService.getAllPostLatest({
-                page: page || 1,
-                limit: limit || 10
-            })
+            metadata: await PostService.getAllPostLatest(
+                userId,
+                {
+                    page: page || 1,
+                    limit: limit || 10
+                }
+            )
         }).send(res)
     }
 
