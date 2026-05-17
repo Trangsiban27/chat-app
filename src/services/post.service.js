@@ -4,6 +4,7 @@ const { BadRequestError } = require("../core/error.response")
 const postsModel = require("../models/posts.model")
 const { post } = require("../routes/post")
 const { getInfoData, convertObjectIdMongoDB } = require("../utils")
+const { getCache, setCache, delCacheByPattern } = require("../utils/redis.utils")
 const { findUserById } = require("./user.service")
 
 class PostService {
@@ -36,7 +37,7 @@ class PostService {
 
         if (!newPost) throw new BadRequestError('Create post fail!')
 
-        console.log('newPost: ', newPost)
+        await delCacheByPattern('post:highlights:*')
 
         const authorData = await findUserById(newPost?.author)
 
@@ -47,18 +48,41 @@ class PostService {
     }
 
     static getAllPostLatest = async (userId, { page = 1, limit = 10 }) => {
-        const skip = (page - 1) * limit
+        const cacheKey = `post:latest:p${page}:l${limit}`
 
-        const posts = await postsModel.find({ isDelete: false })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate('author', '_id username avatar')
-            .lean()
+        let results = await getCache(cacheKey)
 
-        const totalPosts = await postsModel.countDocuments()
+        if (!results) {
+            const skip = (page - 1) * limit
 
-        const postsWithReactStatus = posts.map(post => {
+            const posts = await postsModel.find({ isDelete: false })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate('author', '_id username avatar')
+                .lean()
+
+            console.log('post: ', posts)
+
+            const totalPosts = await postsModel.countDocuments()
+
+            results = {
+                posts,
+                pagination: {
+                    currentPage: Number(page),
+                    limit: Number(limit),
+                    totalElements: totalPosts,
+                    totalPages: Math.ceil(totalPosts / limit)
+                }
+            }
+
+            await setCache(cacheKey, results, 300)
+            console.log(`[Cache] Set new cache for key: ${cacheKey}`);
+        } else {
+            console.log(`[Cache] Hit for key: ${cacheKey}`);
+        }
+
+        const postsWithReactStatus = results?.posts?.map(post => {
             return {
                 ...post,
                 isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
@@ -66,56 +90,67 @@ class PostService {
         });
 
         return {
-            posts: postsWithReactStatus,
-            pagination: {
-                currentPage: Number(page),
-                limit: Number(limit),
-                totalElements: totalPosts,
-                totalPages: Math.ceil(totalPosts / limit)
-            }
+            ...results,
+            posts: postsWithReactStatus
         }
     }
 
     static getHighlightsPost = async (userId, { page = 1, limit = 10 }) => {
-        const skip = (page - 1) * limit
+        const cacheKey = `post:highlights:p${page}:l${limit}`
 
-        const twoDaysAgo = new Date()
-        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+        let results = await getCache(cacheKey)
 
-        const posts = await postsModel.find({
-            createdAt: { $gte: twoDaysAgo },
-            isDelete: false
-        })
-            .sort({
-                reactionCount: -1,
-                commentCount: -1,
-                createdAt: -1
+        if (!results) {
+            const skip = (page - 1) * limit
+
+            const twoDaysAgo = new Date()
+            twoDaysAgo.setDate(twoDaysAgo.getDate() - 5)
+
+            const posts = await postsModel.find({
+                createdAt: { $gte: twoDaysAgo },
+                isDelete: false
             })
-            .skip(skip)
-            .limit(limit)
-            .populate('author', '_id username avatar')
-            .lean()
+                .sort({
+                    reactionCount: -1,
+                    commentCount: -1,
+                    createdAt: -1
+                })
+                .skip(skip)
+                .limit(limit)
+                .populate('author', '_id username avatar')
+                .lean()
 
-        const totalPosts = await postsModel.countDocuments({
-            createdAt: { $gte: twoDaysAgo },
-            isDelete: false
-        })
+            const totalPosts = await postsModel.countDocuments({
+                createdAt: { $gte: twoDaysAgo },
+                isDelete: false
+            })
 
-        const postsWithReactStatus = posts.map(post => {
+            results = {
+                posts,
+                pagination: {
+                    currentPage: Number(page),
+                    limit: Number(limit),
+                    totalElements: totalPosts,
+                    totalPages: Math.ceil(totalPosts / limit)
+                }
+            }
+
+            await setCache(cacheKey, results, 300)
+            console.log(`[Cache] Set new cache for key: ${cacheKey}`);
+        } else {
+            console.log(`[Cache] Hit for key: ${cacheKey}`);
+        }
+
+        const postsWithReactStatus = results?.posts.map(post => {
             return {
                 ...post,
-                isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
+                isReact: post?.reactions ? post?.reactions?.some(id => id?.toString() === userId?.toString()) : false
             };
         });
 
         return {
-            posts: postsWithReactStatus,
-            pagination: {
-                currentPage: Number(page),
-                limit: Number(limit),
-                totalElements: totalPosts,
-                totalPages: Math.ceil(totalPosts / limit)
-            }
+            ...results,
+            posts: postsWithReactStatus
         }
     }
 
@@ -123,20 +158,41 @@ class PostService {
 
         if (!userId) throw new BadRequestError('User not found!')
 
-        const skip = (page - 1) * limit
+        const cacheKey = `post:my-post:p${page}:l${limit}`
 
-        const filter = { author: userId, isDelete: false }
+        let results = await getCache(cacheKey)
 
-        const posts = await postsModel.find(filter)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate('author', '_id username avatar')
-            .lean()
+        if (!results) {
+            const skip = (page - 1) * limit
 
-        const totalPosts = await postsModel.countDocuments(filter)
+            const filter = { author: userId, isDelete: false }
 
-        const postsWithReactStatus = posts.map(post => {
+            const posts = await postsModel.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate('author', '_id username avatar')
+                .lean()
+
+            const totalPosts = await postsModel.countDocuments(filter)
+
+            results = {
+                posts,
+                pagination: {
+                    currentPage: Number(page),
+                    limit: Number(limit),
+                    totalElements: totalPosts,
+                    totalPages: Math.ceil(totalPosts / limit)
+                }
+            }
+
+            await setCache(cacheKey, results, 300)
+            console.log(`[Cache] Set new cache for key: ${cacheKey}`);
+        } else {
+            console.log(`[Cache] Hit for key: ${cacheKey}`);
+        }
+
+        const postsWithReactStatus = results?.posts.map(post => {
             return {
                 ...post,
                 isReact: post.reactions ? post.reactions.some(id => id.toString() === userId?.toString()) : false
@@ -144,13 +200,8 @@ class PostService {
         });
 
         return {
-            posts: postsWithReactStatus,
-            pagination: {
-                currentPage: Number(page),
-                limit: Number(limit),
-                totalElements: totalPosts,
-                totalPages: Math.ceil(totalPosts / limit)
-            }
+            ...results,
+            posts: postsWithReactStatus
         }
     }
 

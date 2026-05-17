@@ -6,6 +6,8 @@ const compression = require('compression')
 const ApiKeysService = require('./services/apiKeys.service')
 const app = express()
 
+require('./config/redis.config')
+
 app.use(morgan('dev'))
 app.use(helmet())
 app.use(compression())
@@ -18,7 +20,7 @@ app.use(cors({
         'Content-Type',
         'Authorization',
         'x-api-key',
-        'x-client-id' // Đây là các header bạn dùng trong axios.ts
+        'x-client-id'
     ],
     credentials: true
 }))
