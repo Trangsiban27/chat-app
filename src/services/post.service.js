@@ -38,6 +38,8 @@ class PostService {
         if (!newPost) throw new BadRequestError('Create post fail!')
 
         await delCacheByPattern('post:highlights:*')
+        await delCacheByPattern('post:latest:*')
+        await delCacheByPattern(`post:my-post:${userId}:*`)
 
         const authorData = await findUserById(newPost?.author)
 
@@ -158,7 +160,7 @@ class PostService {
 
         if (!userId) throw new BadRequestError('User not found!')
 
-        const cacheKey = `post:my-post:p${page}:l${limit}`
+        const cacheKey = `post:my-post:${userId}:p${page}:l${limit}`
 
         let results = await getCache(cacheKey)
 
