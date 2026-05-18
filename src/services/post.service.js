@@ -298,7 +298,7 @@ class PostService {
 
         if (!post) {
             post = await postsModel.findById(postId)
-                .populate('author', '_id username email')
+                .populate('author', '_id username avatar')
                 .lean()
 
             if (!post) throw new BadRequestError('Post not found!')

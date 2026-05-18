@@ -77,7 +77,7 @@ class CommentService {
             .populate('author', '_id username avatar')
             .lean()
 
-        const hasMore = comments.length === limit
+        const hasMore = Number(comments.length) === Number(limit)
         const nextCursor = hasMore ? comments[comments.length - 1]?._id : null
 
         return {
