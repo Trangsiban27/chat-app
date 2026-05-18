@@ -286,6 +286,38 @@ class PostService {
             reactionCount: updatedPost.reactionCount
         }
     }
+
+    static getPostById = async (userId, postId) => {
+        if (!postId) throw new BadRequestError('Post not found!')
+
+        if (!userId) throw new BadRequestError('User not found!')
+
+        const cacheKey = `post:detail:${postId}`
+
+        let post = await getCache(cacheKey)
+
+        if (!post) {
+            post = await postsModel.findById(postId)
+                .populate('author', '_id username email')
+                .lean()
+
+            if (!post) throw new BadRequestError('Post not found!')
+
+            if (post?.isDelete) throw new BadRequestError('Post has been deleted!')
+
+            await setCache(cacheKey, post, 300)
+            console.log('Set cache')
+        } else {
+            console.log('Hit cache')
+        }
+
+        const isReact = await post.reactions ? post?.reactions?.some(id => id === userId) : false
+
+        return {
+            ...post,
+            isReact
+        }
+    }
 }
 
 module.exports = PostService

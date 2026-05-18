@@ -27,5 +27,6 @@ router.get('/highlights', asyncHandler(postController.getAllHighlightPosts))
 router.get('/my-post', asyncHandler(postController.getAllMyPost))
 router.delete('/:postId', asyncHandler(postController.deleteMyPost))
 router.get('/reactions/:postId', asyncHandler(postController.reactionPost))
+router.get('/:postId', asyncHandler(postController.getPostById))
 
 module.exports = router

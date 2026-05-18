@@ -89,6 +89,17 @@ class PostController {
             metadata: await PostService.reactionPost(userId, postId)
         }).send(res)
     }
+
+    getPostById = async (req, res, next) => {
+
+        const userId = req.user
+        const { postId } = req.params
+
+        new SuccessResponse({
+            message: 'Get post successfully!',
+            metadata: await PostService.getPostById(userId, postId)
+        }).send(res)
+    }
 }
 
 module.exports = new PostController()
