@@ -273,6 +273,13 @@ class PostService {
             { new: true }
         )
 
+        if (updatedPost) {
+
+            await delCacheByPattern('post:highlights:*')
+            await delCacheByPattern('post:latest:*')
+            await delCacheByPattern(`post:my-post:${updatedPost?.author}:*`)
+        }
+
         return {
             postId: updatedPost._id,
             isReacted: !isReact,
