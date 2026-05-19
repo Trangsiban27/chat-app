@@ -4,9 +4,11 @@ const morgan = require('morgan')
 const { default: helmet } = require('helmet')
 const compression = require('compression')
 const ApiKeysService = require('./services/apiKeys.service')
+const { syncCommentCountFromRedis } = require('./cron/comment.cron')
 const app = express()
 
 require('./config/redis.config')
+require('./cron/comment.cron')
 
 app.use(morgan('dev'))
 app.use(helmet())

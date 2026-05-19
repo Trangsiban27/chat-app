@@ -27,6 +27,23 @@ const delCache = async (key) => {
     }
 }
 
+const incCache = async (key, value) => {
+    try {
+        return await redis.incrby(key, value)
+    } catch (err) {
+        console.log('err: ', err)
+    }
+}
+
+const getCount = async (key) => {
+    try {
+        const value = redis.get(key)
+        return value ? parseInt(value) : 0
+    } catch (err) {
+        console.log('err: ', err)
+    }
+}
+
 const delCacheByPattern = async (pattern) => {
     try {
         const keys = await redis.keys(pattern)
@@ -44,5 +61,7 @@ module.exports = {
     getCache,
     setCache,
     delCache,
-    delCacheByPattern
+    delCacheByPattern,
+    incCache,
+    getCount
 }

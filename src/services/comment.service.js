@@ -2,14 +2,14 @@
 
 const { BadRequestError } = require("../core/error.response")
 const commentsModel = require("../models/comments.model")
+const postsModel = require("../models/posts.model")
 const { convertObjectIdMongoDB } = require("../utils")
+const { incCache } = require("../utils/redis.utils")
 
 class CommentService {
 
     static createComment = async (userId, { postId, parentId, content }) => {
         if (!userId) throw new BadRequestError('User not found!')
-
-        console.log('postId: ', postId)
 
         if (!postId) throw new BadRequestError('Post not found!')
 
@@ -29,6 +29,13 @@ class CommentService {
         }
 
         const saveComment = await comment.save()
+
+        // postsModel.findByIdAndUpdate(postId, {
+        //     $inc: { commentCount: 1 }
+        // })
+
+        const redisKey = `post:comment_count:${postId}`
+        await incCache(redisKey, 1)
 
         return saveComment
     }
