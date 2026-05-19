@@ -4,7 +4,7 @@ const { BadRequestError } = require("../core/error.response")
 const commentsModel = require("../models/comments.model")
 const postsModel = require("../models/posts.model")
 const { convertObjectIdMongoDB } = require("../utils")
-const { incCache } = require("../utils/redis.utils")
+const { incCache, delCacheByPattern } = require("../utils/redis.utils")
 
 class CommentService {
 
@@ -36,6 +36,12 @@ class CommentService {
 
         const redisKey = `post:comment_count:${postId}`
         await incCache(redisKey, 1)
+
+        await Promise.all([
+            delCacheByPattern('post:highlights:*'),
+            delCacheByPattern('post:latest:*'),
+            delCacheByPattern(`post:my-post:${userId}:*`),
+        ])
 
         return saveComment
     }

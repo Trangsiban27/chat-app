@@ -71,9 +71,12 @@ class PostService {
 
             const finalPosts = await Promise.all(posts.map(async (p) => {
                 const delta = await redis.get(`post:reaction_count:${p._id}`);
+                const commentDelta = await redis.get(`post:comment_count:${p?._id}`)
+
                 return {
                     ...p,
-                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0)),
+                    commentCount: Math.max(0, (p.commentCount || 0) + (parseInt(commentDelta) || 0))
                 };
             }));
 
@@ -138,9 +141,12 @@ class PostService {
 
             const finalPosts = await Promise.all(posts.map(async (p) => {
                 const delta = await redis.get(`post:reaction_count:${p._id}`);
+                const commentDelta = await redis.get(`post:comment_count:${p?._id}`)
+
                 return {
                     ...p,
-                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0)),
+                    commentCount: Math.max(0, (p.commentCount || 0) + (parseInt(commentDelta) || 0))
                 };
             }));
 
@@ -197,9 +203,12 @@ class PostService {
 
             const finalPosts = await Promise.all(posts.map(async (p) => {
                 const delta = await redis.get(`post:reaction_count:${p._id}`);
+                const commentDelta = await redis.get(`post:comment_count:${p?._id}`)
+
                 return {
                     ...p,
-                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0)),
+                    commentCount: Math.max(0, (p.commentCount || 0) + (parseInt(commentDelta) || 0))
                 };
             }));
 
@@ -345,8 +354,14 @@ class PostService {
 
             if (post?.isDelete) throw new BadRequestError('Post has been deleted!')
 
-            await setCache(cacheKey, post, 300)
-            console.log('Set cache')
+            const commentCountDelta = await redis.get(`post:comment_count:${postId}`)
+
+            const finalPost = {
+                ...post,
+                commentCount: Math.max(0, (post?.commentCount || 0) + (parseInt(commentCountDelta) || 0))
+            }
+
+            await setCache(cacheKey, finalPost, 300)
         } else {
             console.log('Hit cache')
         }
