@@ -9,6 +9,7 @@ const app = express()
 
 require('./config/redis.config')
 require('./cron/comment.cron')
+require('./cron/reaction.cron')
 
 app.use(morgan('dev'))
 app.use(helmet())

@@ -1,10 +1,11 @@
 'use strict'
 
+const redis = require("../config/redis.config")
 const { BadRequestError } = require("../core/error.response")
 const postsModel = require("../models/posts.model")
 const { post } = require("../routes/post")
 const { getInfoData, convertObjectIdMongoDB } = require("../utils")
-const { getCache, setCache, delCacheByPattern } = require("../utils/redis.utils")
+const { getCache, setCache, delCacheByPattern, decrCache, incCache, getCount } = require("../utils/redis.utils")
 const { findUserById } = require("./user.service")
 
 class PostService {
@@ -68,8 +69,16 @@ class PostService {
 
             const totalPosts = await postsModel.countDocuments()
 
+            const finalPosts = await Promise.all(posts.map(async (p) => {
+                const delta = await redis.get(`post:reaction_count:${p._id}`);
+                return {
+                    ...p,
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                };
+            }));
+
             results = {
-                posts,
+                posts: finalPosts,
                 pagination: {
                     currentPage: Number(page),
                     limit: Number(limit),
@@ -127,8 +136,16 @@ class PostService {
                 isDelete: false
             })
 
+            const finalPosts = await Promise.all(posts.map(async (p) => {
+                const delta = await redis.get(`post:reaction_count:${p._id}`);
+                return {
+                    ...p,
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                };
+            }));
+
             results = {
-                posts,
+                posts: finalPosts,
                 pagination: {
                     currentPage: Number(page),
                     limit: Number(limit),
@@ -178,8 +195,16 @@ class PostService {
 
             const totalPosts = await postsModel.countDocuments(filter)
 
+            const finalPosts = await Promise.all(posts.map(async (p) => {
+                const delta = await redis.get(`post:reaction_count:${p._id}`);
+                return {
+                    ...p,
+                    reactionCount: Math.max(0, (p.reactionCount || 0) + (parseInt(delta) || 0))
+                };
+            }));
+
             results = {
-                posts,
+                posts: finalPosts,
                 pagination: {
                     currentPage: Number(page),
                     limit: Number(limit),
@@ -253,18 +278,27 @@ class PostService {
 
         let updateData = {}
 
+        const cacheKey = `post:reaction_count:${postId}`
+
         if (isReact) {
 
-            updateData = {
-                $pull: { reactions: userId },
-                $inc: { reactionCount: -1 }
-            }
+            // updateData = {
+            //     $pull: { reactions: userId },
+            //     $inc: { reactionCount: -1 }
+            // }
+
+            updateData = { $pull: { reactions: userId } };
+            await decrCache(cacheKey, 1)
+
         } else {
 
-            updateData = {
-                $addToSet: { reactions: userId },
-                $inc: { reactionCount: 1 }
-            }
+            // updateData = {
+            //     $addToSet: { reactions: userId },
+            //     $inc: { reactionCount: 1 }
+            // }
+
+            updateData = { $addToSet: { reactions: userId } };
+            await incCache(cacheKey, 1)
         }
 
         const updatedPost = await postsModel.findByIdAndUpdate(
@@ -275,15 +309,21 @@ class PostService {
 
         if (updatedPost) {
 
-            await delCacheByPattern('post:highlights:*')
-            await delCacheByPattern('post:latest:*')
-            await delCacheByPattern(`post:my-post:${updatedPost?.author}:*`)
+            await Promise.all([
+                delCacheByPattern('post:highlights:*'),
+                delCacheByPattern('post:latest:*'),
+                delCacheByPattern(`post:my-post:${updatedPost?.author}:*`),
+            ])
+
+
         }
+
+        const redisCount = await getCount(cacheKey)
 
         return {
             postId: updatedPost._id,
             isReacted: !isReact,
-            reactionCount: updatedPost.reactionCount
+            reactionCount: updatedPost?.reactionCount
         }
     }
 
