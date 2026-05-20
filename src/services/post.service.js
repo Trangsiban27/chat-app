@@ -322,6 +322,8 @@ class PostService {
                 delCacheByPattern('post:highlights:*'),
                 delCacheByPattern('post:latest:*'),
                 delCacheByPattern(`post:my-post:${updatedPost?.author}:*`),
+
+                delCacheByPattern(`post:detail:*`)
             ])
 
 
@@ -354,23 +356,27 @@ class PostService {
 
             if (post?.isDelete) throw new BadRequestError('Post has been deleted!')
 
-            const commentCountDelta = await redis.get(`post:comment_count:${postId}`)
-
-            const finalPost = {
-                ...post,
-                commentCount: Math.max(0, (post?.commentCount || 0) + (parseInt(commentCountDelta) || 0))
-            }
-
-            await setCache(cacheKey, finalPost, 300)
+            await setCache(cacheKey, post, 300)
         } else {
             console.log('Hit cache')
         }
 
-        const isReact = await post.reactions ? post?.reactions?.some(id => id === userId) : false
+        //get count cached by redis + count in DB
+        const [commentCountDelta, reactionCountDelta] = await Promise.all([
+            redis.get(`post:comment_count:${postId}`),
+            redis.get(`post:reaction_count:${postId}`)
+        ])
+
+        const commentCount = Math.max(0, (post?.commentCount || 0) + (parseInt(commentCountDelta) || 0))
+        const reactionCount = Math.max(0, (post?.reactionCount || 0) + (parseInt(reactionCountDelta) || 0))
+
+        const isReact = await post.reactions ? post?.reactions?.some(id => id.toString() === userId.toString()) : false
 
         return {
             ...post,
-            isReact
+            isReact,
+            reactionCount,
+            commentCount
         }
     }
 }
