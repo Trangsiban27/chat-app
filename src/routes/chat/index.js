@@ -9,5 +9,6 @@ const router = express.Router()
 router.use(authentication)
 
 router.post('/conversation', asyncHandler(conversationController.startConversation))
+router.get('/conversation', asyncHandler(conversationController.getConversationList))
 
 module.exports = router

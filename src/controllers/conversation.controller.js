@@ -14,6 +14,16 @@ class ConversationController {
             metadata: await ConversationService.CreateConversation(senderId, recipientId)
         }).send(res)
     }
+
+    getConversationList = async (req, res, next) => {
+        const userId = req.user
+        const { lastId, limit } = req.query
+
+        new SuccessResponse({
+            message: 'Get conversation list successfully',
+            metadata: await ConversationService.getConversationList(userId, lastId, limit)
+        }).send(res)
+    }
 }
 
 

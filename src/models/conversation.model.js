@@ -15,6 +15,11 @@ const ConversationSchema = new Schema({
     lastMessage: {
         type: Schema.Types.ObjectId,
         ref: 'message'
+    },
+    unreadCount: {
+        type: Map,
+        of: Number,
+        default: {}
     }
 }, {
     collection: COLLECTION_NAME,
