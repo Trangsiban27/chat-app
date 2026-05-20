@@ -1,3 +1,4 @@
+const conversationModel = require("../models/conversation.model");
 const messageModel = require("../models/message.model");
 
 const chatHandler = (io, socket) => {
@@ -28,11 +29,20 @@ const chatHandler = (io, socket) => {
 
             console.log(`User ${senderId} send message to user ${senderId} with ${text}`)
 
+            await conversationModel.findByIdAndUpdate(conversationId, {
+                lastMessage: newMessage?._id
+            })
+
             io.to(conversationId).emit('receive_message', {
                 _id: newMessage._id,
                 conversationId: newMessage.conversationId,
                 senderId: newMessage.sender,
                 text: newMessage.text,
+            })
+
+            io.to(conversationId).emit('update_conversation_list', {
+                conversationId,
+                lastMessage: newMessage
             })
         } catch (err) {
             console.log('Error when send message: ', err)
