@@ -15,7 +15,7 @@ const chatHandler = (io, socket) => {
 
     socket.on('send_message', async (data) => {
         console.log('send message')
-        const { conversationId, senderId, text } = data
+        const { conversationId, senderId, text, media } = data
 
         if (!text || text.trim() === '') return
 
@@ -24,7 +24,8 @@ const chatHandler = (io, socket) => {
             const newMessage = await messageModel.create({
                 conversationId,
                 sender: senderId,
-                text
+                text,
+                media: media || []
             })
 
             console.log(`User ${senderId} send message to user ${senderId} with ${text}`)
@@ -33,11 +34,11 @@ const chatHandler = (io, socket) => {
                 lastMessage: newMessage?._id
             })
 
+            const messageData = newMessage.toObject();
+
             io.to(conversationId).emit('receive_message', {
-                _id: newMessage._id,
-                conversationId: newMessage.conversationId,
-                senderId: newMessage.sender,
-                text: newMessage.text,
+                ...messageData,
+                senderId: messageData.sender
             })
 
             io.to(conversationId).emit('update_conversation_list', {
@@ -46,6 +47,25 @@ const chatHandler = (io, socket) => {
             })
         } catch (err) {
             console.log('Error when send message: ', err)
+        }
+    })
+
+    socket.on('mark_as_read', async ({ conversationId, userId }) => {
+        try {
+
+            await messageModel.updateMany(
+                {
+                    conversationId,
+                    sender: { $ne: userId },
+                    isRead: false
+                },
+                { $set: { isRead: true } }
+            )
+
+            socket.to(conversationId).emit('messages_seen', { conversationId, userId })
+
+        } catch (err) {
+            console.log('Mark as read error: ', err)
         }
     })
 }

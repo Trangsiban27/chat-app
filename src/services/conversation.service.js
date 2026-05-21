@@ -1,8 +1,10 @@
 'use strict'
 
+const uploadCloud = require("../config/cloudinary")
 const { BadRequestError } = require("../core/error.response")
 const conversationModel = require("../models/conversation.model")
 const { convertObjectIdMongoDB } = require("../utils")
+const cloudinary = require('../config/cloudinary')
 
 class ConversationService {
 

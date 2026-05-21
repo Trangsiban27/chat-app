@@ -13,10 +13,13 @@ const MessageSchema = new Schema({
         ref: 'user'
     },
     text: String,
-    media: [{
-        url: String,
-        type: String,
-    }],
+    media: {
+        type: [{
+            url: { type: String, required: true },
+            type: { type: String, default: 'image' }
+        }],
+        default: []
+    },
     isRead: {
         type: Boolean,
         default: false
@@ -24,6 +27,11 @@ const MessageSchema = new Schema({
 }, {
     collection: COLLECTION_NAME,
     timestamps: true
+})
+
+MessageSchema.index({
+    conversationId: 1,
+    createdAt: -1
 })
 
 module.exports = mongoose.model(DOCUMENT_NAME, MessageSchema)
