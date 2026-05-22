@@ -1,7 +1,7 @@
 const { Schema, default: mongoose } = require("mongoose");
 
-const COLLECTION_NAME = 'collection'
-const DOCUMENT_NAME = 'collections'
+const COLLECTION_NAME = 'conversation'
+const DOCUMENT_NAME = 'conversations'
 
 const ConversationSchema = new Schema({
     participants: [{

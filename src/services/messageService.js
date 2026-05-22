@@ -24,7 +24,7 @@ class MessageService {
             .populate('sender', '_id username avatar')
             .lean()
 
-        const hasMore = messageList?.length === limit
+        const hasMore = messageList?.length === Number(limit)
         const nextCursor = hasMore ? messageList[messageList?.length - 1] : null
 
         return {

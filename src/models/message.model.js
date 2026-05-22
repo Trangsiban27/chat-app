@@ -1,7 +1,7 @@
 const { Schema, default: mongoose } = require("mongoose")
 
 const COLLECTION_NAME = 'message'
-const DOCUMENT_NAME = 'messages'
+const DOCUMENT_NAME = 'message'
 
 const MessageSchema = new Schema({
     conversationId: {

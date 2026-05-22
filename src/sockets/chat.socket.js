@@ -8,7 +8,7 @@ const chatHandler = (io, socket) => {
         const { conversationId } = data
 
         if (conversationId) {
-            socket.join(conversationId)
+            socket.join(conversationId.toString())
             console.log(`User ${socket.id} joined room: ${conversationId}`);
         }
     })
@@ -34,14 +34,17 @@ const chatHandler = (io, socket) => {
                 lastMessage: newMessage?._id
             })
 
+            const clientsInRoom = io.sockets.adapter.rooms.get(conversationId.toString());
+            console.log(`Emit tới phòng ${conversationId.toString()}. Hiện có ${clientsInRoom?.size || 0} kết nối trong phòng.`);
+
             const messageData = newMessage.toObject();
 
-            io.to(conversationId).emit('receive_message', {
+            io.to(conversationId.toString()).emit('receive_message', {
                 ...messageData,
                 senderId: messageData.sender
             })
 
-            io.to(conversationId).emit('update_conversation_list', {
+            io.to(conversationId.toString()).emit('update_conversation_list', {
                 conversationId,
                 lastMessage: newMessage
             })

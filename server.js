@@ -10,6 +10,8 @@ connectDB()
 const server = http.createServer(app)
 const io = initSocket(server);
 
+console.log("Danh sách tất cả các phòng:", io.sockets.adapter.rooms);
+
 // require('./src/sockets/chat')
 
 const PORT = process.env.PORT || 5000
